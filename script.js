@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const flyer = document.getElementById('flyer');
     const base = document.getElementById('base');
     const toggleMusicBtn = document.getElementById("toggleMusic");
-
     const screem = new Audio("screem.mp3");
     const bgMusic = new Audio("track.mp3");
     bgMusic.loop = true;
+    const tg = window.Telegram.WebApp;
 
     let isMusicPlaying = JSON.parse(localStorage.getItem("musicEnabled")) ?? true; // Берём из localStorage или включаем по умолчанию
     let score = 0;
@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         flyer.style.transform = `translateX(-50%) rotate(${fallDeg}deg)`;
         isGameRunning = false;
         messageElement.textContent = 'Игра окончена!';
+        gameOver();
     }
 
     function throwCheerleader(success) {
@@ -145,4 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     gameContainer.addEventListener('click', checkClick);
     initGame();
+
+    function gameOver() {
+        tg.sendData(JSON.stringify({ score })); // Отправка данных в Telegram
+        tg.close(); // Закрыть игру после завершения
+    }
 });
