@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background-color: #fff;
+            border: 2px solid #000;
+            overflow: hidden;
+            background-size: cover;
+            background-position: right;
+        }
+
+        .foot {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 65px;
+            height: 40px;
+            background: url("img/foot.png") no-repeat;
+            filter: drop-shadow(12px 5px 7px rgba(0, 0, 0, 0.7));
+            transform: translateY(-50%);
+            transition: left 0.1s linear;
+            z-index: 99;
+            background-size: contain;
+        }
+
+        .hand {
+            position: absolute;
+            top: 30px;
+            height: 50px;
+            width: 50px;
+            background: url("img/hand.png") no-repeat;
+            background-size: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+            transform: translateY(-50%);
+        }
+
+        .stats {
+            color: white;
+            margin-left: 10px;
+            margin-top: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: -1px -1px 0 black,
+            1px -1px 0 black,
+            -1px 1px 0 black,
+            1px 1px 0 black;
+        }
+
+        .message {
+            margin-top: 50px;
+            margin-left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: -1px -1px 0 black,
+            1px -1px 0 black,
+            -1px 1px 0 black,
+            1px 1px 0 black;
+        }
+
+        .flyer {
+            background: url("img/flyer.png");
+            background-size: 200% 300%; /* 2 колонки, 3 строки */
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            width: 130px;
+            height: 150px;
+            transform: translateX(-50%);
+            transition: bottom 0.5s ease-in-out;
+
+            animation: flyer-animation 0.6s steps(1) infinite;
+            filter: drop-shadow(12px 5px 7px rgba(0, 0, 0, 0.4));
+        }
+
+        .base {
+            background: url("img/base1.png");
+            background-size: 300% 200%; /* 3 столбца (ширина), 2 ряда (высота) */
+            position: absolute;
+            transition: background-image 0.25s ease-in-out;
+
+            bottom: 10px;
+            left: 50%;
+            width: 150px;
+            height: 190px;
+            transform: translateX(-50%);
+
+            animation: base-animation 0.6s steps(1) infinite;
+            filter: drop-shadow(12px 5px 7px rgba(0, 0, 0, 0.7));
+        }
+
+        @keyframes flyer-animation {
+            0% { /* 1-й кадр */
+                background-position: 0 0;
+            }
+            20% { /* 2-й кадр */
+                background-position: 100% 0;
+            }
+            40% { /* 3-й кадр */
+                background-position: 0 50%;
+            }
+            60% { /* 4-й кадр */
+                background-position: 100% 50%;
+            }
+            80% { /* 5-й кадр */
+                background-position: 0 100%;
+            }
+            100% { /* Возвращаемся к 1-му кадру */
+                background-position: 0 0;
+            }
+        }
+
+        @keyframes base-animation {
+            /* 1-й кадр (левый верхний) */
+            0% {
+                background-position: 0 0;
+            }
+            /* 2-й кадр (середина верхнего ряда) */
+            16% {
+                background-position: 50% 0;
+            }
+            /* 3-й кадр (правый верхний) */
+            32% {
+                background-position: 100% 0;
+            }
+            /* 4-й кадр (левый нижний) */
+            48% {
+                background-position: 0 100%;
+            }
+            /* 5-й кадр (середина нижнего ряда) */
+            64% {
+                background-position: 50% 100%;
+            }
+            /* 6-й кадр (правый нижний) */
+            80% {
+                background-position: 100% 100%;
+            }
+            /* Возвращаемся к 1-му кадру */
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+
+        @keyframes lift {
+            0% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-20px);
+            }
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чирлидер: Забрось девочек!</title>
+</head>
+<body>
+
+<div class="game-container" id="gameContainer">
+    <div class="message" id="message"></div>
+    <div class="stats">
+        <p>Заходов: <span id="score">0</span></p>
+    </div>
+    <div class="foot" id="foot"></div>
+    <div class="hand" id="hand"></div>
+    <div class="base" id="base"></div>
+    <div class="flyer" id="flyer"></div>
+</div>
+
+<script>
+    const floorPixel = 10;
+    const gameContainer = document.getElementById('gameContainer');
+    const foot = document.getElementById('foot');
+    const hand = document.getElementById('hand');
+    const scoreElement = document.getElementById('score');
+    const messageElement = document.getElementById('message');
+    const flyer = document.getElementById('flyer');
+    const base = document.getElementById('base');
+
+    let score = 0;
+    let isGameRunning = true;
+    let isProcessing = false; // Флаг для обработки клика
+    let footDirection = 1; // 1 - вправо, -1 - влево
+    let footSpeed = 20; // Начальная скорость
+    let handWidth = 100; // Начальная ширина зеленой зоны
+    let handPosition = 0;
+
+
+    // Генерация случайной скорости для ползунка
+    function generateFootSpeed() {
+        footSpeed = Math.floor(Math.random() * 5) + 20; // Скорость от 20 до 25
+    }
+
+    function successCatch() {
+        score++;
+        if (score % 10 === 0) {
+            generateRandomBg();
+        }
+        scoreElement.textContent = score;
+        // Перезапуск для следующего броска
+        setTimeout(() => {
+            base.style.backgroundImage = 'url("img/base1.png")';
+            flyer.style.bottom = `${floorPixel}px`; // Возвращаем flyer в начальное положение
+            generateFootSpeed();
+        }, 500);
+    }
+
+    function fall() {
+        // Неудачный бросок: flyer падает
+        flyer.style.bottom = `${floorPixel}px`;
+        let fallDeg = Math.floor(Math.random() * 361);
+        flyer.style.transform = `translateX(-50%) rotate(${fallDeg}deg)`;
+        isGameRunning = false;
+        messageElement.textContent = 'Игра окончена!';
+    }
+
+    // Анимация заброса девочки
+    function throwCheerleader(success) {
+        base.style.backgroundImage = 'url("img/base2.png")';
+        flyer.style.bottom = `${base.clientHeight - base.clientHeight / 4.7}px`;
+        // Анимация поднятия base
+        base.style.animation = 'lift 0.5s linear';
+        // Сброс анимации после завершения
+        setTimeout(() => {
+            base.style.animation = '';
+            if (success) {
+                successCatch();
+            } else {
+                fall();
+            }
+            isProcessing = false; // Разблокируем движение ползунка
+            moveFoot();
+        }, 500);
+    }
+
+
+    // Движение ползунка
+    function moveFoot() {
+        if (!isGameRunning || isProcessing) return; // Останавливаем движение, если идет обработка
+
+        const footRect = foot.getBoundingClientRect();
+        const containerRect = gameContainer.getBoundingClientRect();
+
+        let newLeft = foot.offsetLeft + footDirection * footSpeed;
+
+        // Если ползунок достигает края, меняем направление
+        if (newLeft <= 0 || newLeft + footRect.width >= containerRect.width) {
+            footDirection *= -1;
+        }
+
+        foot.style.left = `${newLeft}px`;
+        hand.style.right = `${newLeft}px`;
+
+        requestAnimationFrame(moveFoot);
+    }
+
+    // Проверка нажатия
+    function checkClick() {
+        if (!isGameRunning || isProcessing) return; // Игнорируем клик, если идет обработка
+
+        isProcessing = true; // Блокируем движение ползунка
+
+        const footRect = foot.getBoundingClientRect();
+        const handRect = hand.getBoundingClientRect();
+
+        // Проверка, находится ли ползунок в зеленой зоне
+        if (footRect.right >= handRect.left + 20 && footRect.left <= handRect.right - 20) {
+            throwCheerleader(true); // Успешный бросок
+        } else {
+            throwCheerleader(false); // Неудачный бросок
+        }
+    }
+
+    // Инициализация игры
+    function initGame() {
+        generateRandomBg()
+        score = 0;
+        isGameRunning = true;
+        isProcessing = false;
+        scoreElement.textContent = score;
+        messageElement.textContent = '';
+        generateFootSpeed();
+        moveFoot();
+    }
+
+    function generateRandomBg() {
+        const randBg = Math.floor(Math.random() * 6) + 1;
+        gameContainer.style.backgroundImage = `url(img/bg${randBg}.png)`;
+    }
+
+    // Обработчик клика
+    gameContainer.addEventListener('click', checkClick);
+
+    // Запуск игры
+    initGame();
+</script>
+</body>
+</html>
