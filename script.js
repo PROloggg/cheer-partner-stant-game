@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const screem = new Audio("screem.mp3");
     const bgMusic = new Audio("track.mp3");
     bgMusic.loop = true;
-    const tg = window.Telegram.WebApp;
 
     let isMusicPlaying = JSON.parse(localStorage.getItem("musicEnabled")) ?? true; // Берём из localStorage или включаем по умолчанию
     let score = 0;
@@ -148,7 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initGame();
 
     function gameOver() {
-        tg.sendData(JSON.stringify({ score })); // Отправка данных в Telegram
-        tg.close(); // Закрыть игру после завершения
+        Telegram.WebApp.ready();
+        Telegram.WebApp.sendData(JSON.stringify({ score: score }));
+        // Telegram.WebApp.close();
     }
 });
