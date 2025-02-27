@@ -21,9 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let footSpeed = 20;
 
     function generateFootSpeed() {
-        footSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
+        // Базовая скорость: от 15 до 25
+        let baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
+        // Увеличиваем скорость пропорционально очкам (например, +1 к скорости за каждые 5 очков)
+        let speedIncrease = Math.floor(score / 5);
+        footSpeed = baseSpeed + speedIncrease;
+        // Ограничиваем максимальную скорость, чтобы не было слишком быстро
+        footSpeed = Math.min(footSpeed, 50); // Максимум 50 для играбельности
     }
-
     function successCatch() {
         score++;
         if (score % 10 === 0) {
@@ -87,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target === toggleMusicBtn || event.target === restartButton) return;
 
         isProcessing = true;
-
         const footRect = foot.getBoundingClientRect();
         const handRect = hand.getBoundingClientRect();
 
@@ -96,12 +100,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const handLeft = handRect.left;
         const handRight = handRect.right;
 
+        // Проверяем, есть ли пересечение вообще
+        const hasIntersection = footLeft < handRight && footRight > handLeft;
+        if (!hasIntersection) {
+            throwCheerleader(false);
+            return;
+        }
+
+        // Вычисляем ширину пересечения
         const overlapX = Math.max(0, Math.min(footRight, handRight) - Math.max(footLeft, handLeft));
 
-        const minOverlapFoot = footRect.width / 3;
+        // Минимальная ширина пересечения
+        const minOverlapFoot = footRect.width / 4;
         const minOverlapHand = handRect.width / 3;
 
-        if (overlapX >= minOverlapFoot && overlapX >= minOverlapHand) {
+        // Проверяем значительное пересечение
+        const isSignificantOverlap = overlapX >= minOverlapFoot && overlapX >= minOverlapHand;
+
+        if (isSignificantOverlap) {
             throwCheerleader(true);
         } else {
             throwCheerleader(false);
