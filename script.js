@@ -8,11 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const flyer = document.getElementById('flyer');
     const base = document.getElementById('base');
     const toggleMusicBtn = document.getElementById("toggleMusic");
+    const restartButton = document.getElementById("restartButton");
     const screem = new Audio("screem.mp3");
     const bgMusic = new Audio("track.mp3");
     bgMusic.loop = true;
 
-    let isMusicPlaying = JSON.parse(localStorage.getItem("musicEnabled")) ?? true; // Берём из localStorage или включаем по умолчанию
+    let isMusicPlaying = JSON.parse(localStorage.getItem("musicEnabled")) ?? true;
     let score = 0;
     let isGameRunning = true;
     let isProcessing = false;
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function fall() {
-        if (isMusicPlaying) screem.play(); // Только если музыка включена
+        if (isMusicPlaying) screem.play();
 
         flyer.style.bottom = `${floorPixel}px`;
         let fallDeg = Math.floor(Math.random() * 361);
@@ -83,8 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkClick(event) {
         if (!isGameRunning || isProcessing) return;
         if (isMusicPlaying && !bgMusic.onplaying) bgMusic.play();
-        // Игнорируем клик по кнопке музыки
-        if (event.target === toggleMusicBtn) return;
+        if (event.target === toggleMusicBtn || event.target === restartButton) return;
 
         isProcessing = true;
 
@@ -115,10 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
         isProcessing = false;
         scoreElement.textContent = score;
         messageElement.textContent = '';
+        flyer.style.transform = 'translateX(-50%) rotate(0deg)';
+        resetThrow();
+        gameContainer.style.backgroundColor = 'transparent';
+        restartButton.style.display = 'none';
         generateFootSpeed();
         moveFoot();
-
-        updateMusicButton(); // Обновляем иконку кнопки
+        updateMusicButton();
     }
 
     function generateRandomBg() {
@@ -132,8 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     toggleMusicBtn.addEventListener("click", () => {
-        isMusicPlaying = !isMusicPlaying; // Переключаем состояние
-        localStorage.setItem("musicEnabled", JSON.stringify(isMusicPlaying)); // Сохраняем в localStorage
+        isMusicPlaying = !isMusicPlaying;
+        localStorage.setItem("musicEnabled", JSON.stringify(isMusicPlaying));
 
         if (isMusicPlaying) {
             bgMusic.play().catch(error => console.error("Ошибка воспроизведения:", error));
@@ -143,12 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMusicButton();
     });
 
+    restartButton.addEventListener('click', () => {
+        initGame();
+    });
+
     gameContainer.addEventListener('click', checkClick);
     initGame();
 
     function gameOver() {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.sendData(JSON.stringify({ score: score }));
-        // Telegram.WebApp.close();
+        // Telegram.WebApp.ready();
+        // Telegram.WebApp.sendData(JSON.stringify({ score: score }));
+        gameContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        restartButton.style.display = 'block';
     }
 });
