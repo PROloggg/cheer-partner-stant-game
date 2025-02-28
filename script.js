@@ -142,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateRandomBg() {
         const randBg = Math.floor(Math.random() * 6) + 1;
-        gameContainer.classList.add("fade-bg");
         gameContainer.style.backgroundImage = `url(img/bg${randBg}.png)`;
     }
 
@@ -172,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameOver() {
         Telegram.WebApp.ready();
         Telegram.WebApp.sendData(JSON.stringify({ score: score }));
-        gameContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        gameContainer.style.backgroundColor = 'rgba(0, 0, 255, 0.7)';
         restartButton.style.display = 'block';
     }
 });
