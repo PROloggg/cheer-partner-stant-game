@@ -170,8 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initGame();
 
     function gameOver() {
-        // Telegram.WebApp.ready();
-        // Telegram.WebApp.sendData(JSON.stringify({ score: score }));
+        Telegram.WebApp.ready();
+        Telegram.WebApp.sendData(JSON.stringify({ score: score }));
         gameContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         restartButton.style.display = 'block';
     }
