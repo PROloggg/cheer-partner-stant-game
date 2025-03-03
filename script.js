@@ -13,25 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const bgMusic = new Audio('track.mp3');
     bgMusic.loop = true;
 
-    // Инициализация состояния игры
     let isMusicPlaying = JSON.parse(localStorage.getItem('musicEnabled')) ?? true;
     let score = 0;
     let isGameRunning = true;
     let isProcessing = false;
     let footDirection = 1;
     let footSpeed = 20;
-
-    // Таблица лидеров (локальное хранение)
     let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 
-    // Генерация скорости движения ног
     function generateFootSpeed() {
         const baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
         const speedIncrease = Math.floor(score / 5);
-        footSpeed = Math.min(baseSpeed + speedIncrease, 50); // Максимальная скорость 50
+        footSpeed = Math.min(baseSpeed + speedIncrease, 50);
     }
 
-    // Успешный бросок
     function successCatch() {
         score++;
         if (score % 10 === 0) {
@@ -41,14 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(resetThrow, 500);
     }
 
-    // Сброс положения после броска
     function resetThrow() {
         base.style.backgroundImage = 'url("img/base1.png")';
         flyer.style.bottom = `${floorPixel}px`;
         generateFootSpeed();
     }
 
-    // Падение (конец игры)
     function fall() {
         if (isMusicPlaying) screem.play();
         flyer.style.bottom = `${floorPixel}px`;
@@ -59,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameOver();
     }
 
-    // Анимация броска
     function throwCheerleader(success) {
         base.style.backgroundImage = 'url("img/base2.png")';
         flyer.style.bottom = `${base.clientHeight - base.clientHeight / 4.7}px`;
@@ -72,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }
 
-    // Движение ног
     function moveFoot() {
         if (!isGameRunning || isProcessing) return;
         const footRect = foot.getBoundingClientRect();
@@ -88,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(moveFoot);
     }
 
-    // Проверка клика для броска
     function checkClick(event) {
         if (!isGameRunning || isProcessing) return;
         if (isMusicPlaying && !bgMusic.paused) bgMusic.play().catch(() => {});
@@ -116,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throwCheerleader(isSignificantOverlap);
     }
 
-    // Инициализация игры
     function initGame() {
         generateRandomBg();
         score = 0;
@@ -133,18 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMusicButton();
     }
 
-    // Случайный фон
     function generateRandomBg() {
         const randBg = Math.floor(Math.random() * 6) + 1;
         gameContainer.style.backgroundImage = `url("img/bg${randBg}.png")`;
     }
 
-    // Обновление кнопки музыки
     function updateMusicButton() {
         toggleMusicBtn.textContent = isMusicPlaying ? '🔊' : '🔇';
     }
 
-    // Переключение музыки
     toggleMusicBtn.addEventListener('click', () => {
         isMusicPlaying = !isMusicPlaying;
         localStorage.setItem('musicEnabled', JSON.stringify(isMusicPlaying));
@@ -156,49 +142,47 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMusicButton();
     });
 
-    // Перезапуск игры
     restartButton.addEventListener('click', initGame);
-
-    // Обработка кликов
     gameContainer.addEventListener('click', checkClick);
 
-    // Обновление таблицы лидеров
     function updateLeaderboard(score) {
-        const user = Telegram.WebApp.initDataUnsafe?.user?.username || 'Аноним';
+        const user = Telegram.WebApp?.initDataUnsafe?.user?.first_name + ' ' +
+            (Telegram.WebApp?.initDataUnsafe?.user?.last_name || '') || 'Аноним';
         leaderboard.push({ user, score });
-        leaderboard.sort((a, b) => b.score - a.score); // Сортировка по убыванию
-        leaderboard = leaderboard.slice(0, 10); // Топ-10
+        leaderboard.sort((a, b) => b.score - a.score);
+        leaderboard = leaderboard.slice(0, 10);
         localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
     }
 
-    // Формирование текста таблицы лидеров
     function getLeaderboardText() {
-        if (leaderboard.length === 0) return 'Таблица лидеров пуста.';
-        return '🏆 Таблица лидеров:\n' + leaderboard
-            .map((entry, index) => `${index + 1}. ${entry.user}: ${entry.score} очков`)
+        if (leaderboard.length === 0) return 'Top Players\nПока нет лидеров.';
+        return 'Top Players\n' + leaderboard
+            .map((entry, index) => `${index + 1}. ${entry.user} – ${entry.score}`)
             .join('\n');
     }
 
-    // Отображение таблицы лидеров в интерфейсе
     function displayLeaderboard() {
         messageElement.textContent = `Игра окончена! Ваш счёт: ${score}\n${getLeaderboardText()}`;
     }
 
-    // Завершение игры
-    function gameOver() {
-        Telegram.WebApp.ready();
+    async function gameOver() {
+        if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+            Telegram.WebApp.ready();
+            const user = Telegram.WebApp.initDataUnsafe?.user?.first_name + ' ' +
+                (Telegram.WebApp.initDataUnsafe?.user?.last_name || '') || 'Аноним';
+            const chatId = Telegram.WebApp.initDataUnsafe?.chat?.id; // ID группы или чата
+            const data = { score: score, user: user, chatId: chatId };
+            console.log('Отправляем данные в Telegram:', data);
+            Telegram.WebApp.sendData(JSON.stringify(data));
+        } else {
+            console.warn('Telegram Web App не доступен.');
+        }
 
-        // Отправляем данные серверу через Web App для обработки на PHP
-        Telegram.WebApp.sendData(JSON.stringify({ score: score }));
-
-        // Обновляем локальную таблицу лидеров и показываем в интерфейсе
         updateLeaderboard(score);
         displayLeaderboard();
-
         gameContainer.style.backgroundColor = 'rgba(0, 0, 255, 0.7)';
         restartButton.style.display = 'block';
     }
 
-    // Старт игры
     initGame();
 });
