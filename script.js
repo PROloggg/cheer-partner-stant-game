@@ -146,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.addEventListener('click', checkClick);
 
     function updateLeaderboard(score) {
-        const user = Telegram.WebApp?.initDataUnsafe?.user?.first_name + ' ' +
-            (Telegram.WebApp?.initDataUnsafe?.user?.last_name || '') || 'Аноним';
+        const userData = Telegram.WebApp?.initDataUnsafe?.user;
+        const user = userData ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.username || 'Аноним' : 'Аноним';
         leaderboard.push({ user, score });
         leaderboard.sort((a, b) => b.score - a.score);
         leaderboard = leaderboard.slice(0, 10);
@@ -166,22 +166,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function gameOver() {
-        if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+        const userData = Telegram.WebApp?.initDataUnsafe?.user;
+        const user = userData ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.username || 'Аноним' : 'Аноним';
+        const chatId = Telegram.WebApp?.initDataUnsafe?.chat?.id;
+
+        if (typeof Telegram !== 'undefined' && Telegram.WebApp && chatId) {
             Telegram.WebApp.ready();
-            const user = Telegram.WebApp.initDataUnsafe?.user?.first_name + ' ' +
-                (Telegram.WebApp.initDataUnsafe?.user?.last_name || '') || 'Аноним';
-            const chatId = Telegram.WebApp.initDataUnsafe?.chat?.id; // ID группы или чата
             const data = { score: score, user: user, chatId: chatId };
             console.log('Отправляем данные в Telegram:', data);
             Telegram.WebApp.sendData(JSON.stringify(data));
         } else {
-            console.warn('Telegram Web App не доступен.');
+            console.warn('Telegram Web App или chatId не доступен.');
         }
 
         updateLeaderboard(score);
         displayLeaderboard();
         gameContainer.style.backgroundColor = 'rgba(0, 0, 255, 0.7)';
         restartButton.style.display = 'block';
+
+        // Закрываем Web App после завершения игры (опционально)
+        Telegram.WebApp.close();
     }
 
     initGame();
