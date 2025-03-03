@@ -7,29 +7,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageElement = document.getElementById('message');
     const flyer = document.getElementById('flyer');
     const base = document.getElementById('base');
-    const toggleMusicBtn = document.getElementById("toggleMusic");
-    const restartButton = document.getElementById("restartButton");
-    const screem = new Audio("screem.mp3");
-    const bgMusic = new Audio("track.mp3");
+    const toggleMusicBtn = document.getElementById('toggleMusic');
+    const restartButton = document.getElementById('restartButton');
+    const screem = new Audio('screem.mp3');
+    const bgMusic = new Audio('track.mp3');
     bgMusic.loop = true;
 
-    let isMusicPlaying = JSON.parse(localStorage.getItem("musicEnabled")) ?? true;
+    // Инициализация состояния игры
+    let isMusicPlaying = JSON.parse(localStorage.getItem('musicEnabled')) ?? true;
     let score = 0;
     let isGameRunning = true;
     let isProcessing = false;
     let footDirection = 1;
     let footSpeed = 20;
 
-    // Таблица лидеров (временное хранение в памяти)
-    let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+    // Таблица лидеров (локальное хранение)
+    let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 
+    // Генерация скорости движения ног
     function generateFootSpeed() {
-        let baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
-        let speedIncrease = Math.floor(score / 5);
-        footSpeed = baseSpeed + speedIncrease;
-        footSpeed = Math.min(footSpeed, 50);
+        const baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
+        const speedIncrease = Math.floor(score / 5);
+        footSpeed = Math.min(baseSpeed + speedIncrease, 50); // Максимальная скорость 50
     }
 
+    // Успешный бросок
     function successCatch() {
         score++;
         if (score % 10 === 0) {
@@ -39,22 +41,25 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(resetThrow, 500);
     }
 
+    // Сброс положения после броска
     function resetThrow() {
         base.style.backgroundImage = 'url("img/base1.png")';
         flyer.style.bottom = `${floorPixel}px`;
         generateFootSpeed();
     }
 
+    // Падение (конец игры)
     function fall() {
         if (isMusicPlaying) screem.play();
         flyer.style.bottom = `${floorPixel}px`;
-        let fallDeg = Math.floor(Math.random() * 361);
+        const fallDeg = Math.floor(Math.random() * 361);
         flyer.style.transform = `translateX(-50%) rotate(${fallDeg}deg)`;
         isGameRunning = false;
         messageElement.textContent = 'Игра окончена!';
         gameOver();
     }
 
+    // Анимация броска
     function throwCheerleader(success) {
         base.style.backgroundImage = 'url("img/base2.png")';
         flyer.style.bottom = `${base.clientHeight - base.clientHeight / 4.7}px`;
@@ -67,23 +72,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }
 
+    // Движение ног
     function moveFoot() {
         if (!isGameRunning || isProcessing) return;
         const footRect = foot.getBoundingClientRect();
         const containerRect = gameContainer.getBoundingClientRect();
         let newLeft = foot.offsetLeft + footDirection * footSpeed;
+
         if (newLeft <= 0 || newLeft + footRect.width >= containerRect.width) {
             footDirection *= -1;
         }
+
         foot.style.left = `${newLeft}px`;
         hand.style.right = `${newLeft}px`;
         requestAnimationFrame(moveFoot);
     }
 
+    // Проверка клика для броска
     function checkClick(event) {
         if (!isGameRunning || isProcessing) return;
-        if (isMusicPlaying && !bgMusic.onplaying) bgMusic.play();
+        if (isMusicPlaying && !bgMusic.paused) bgMusic.play().catch(() => {});
         if (event.target === toggleMusicBtn || event.target === restartButton) return;
+
         isProcessing = true;
         const footRect = foot.getBoundingClientRect();
         const handRect = hand.getBoundingClientRect();
@@ -91,22 +101,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const footRight = footRect.right;
         const handLeft = handRect.left;
         const handRight = handRect.right;
+
         const hasIntersection = footLeft < handRight && footRight > handLeft;
         if (!hasIntersection) {
             throwCheerleader(false);
             return;
         }
+
         const overlapX = Math.max(0, Math.min(footRight, handRight) - Math.max(footLeft, handLeft));
         const minOverlapFoot = footRect.width / 4;
         const minOverlapHand = handRect.width / 3;
         const isSignificantOverlap = overlapX >= minOverlapFoot && overlapX >= minOverlapHand;
-        if (isSignificantOverlap) {
-            throwCheerleader(true);
-        } else {
-            throwCheerleader(false);
-        }
+
+        throwCheerleader(isSignificantOverlap);
     }
 
+    // Инициализация игры
     function initGame() {
         generateRandomBg();
         score = 0;
@@ -123,122 +133,72 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMusicButton();
     }
 
+    // Случайный фон
     function generateRandomBg() {
         const randBg = Math.floor(Math.random() * 6) + 1;
-        gameContainer.style.backgroundImage = `url(img/bg${randBg}.png)`;
+        gameContainer.style.backgroundImage = `url("img/bg${randBg}.png")`;
     }
 
+    // Обновление кнопки музыки
     function updateMusicButton() {
-        toggleMusicBtn.textContent = isMusicPlaying ? "🔊" : "🔇";
+        toggleMusicBtn.textContent = isMusicPlaying ? '🔊' : '🔇';
     }
 
-    toggleMusicBtn.addEventListener("click", () => {
+    // Переключение музыки
+    toggleMusicBtn.addEventListener('click', () => {
         isMusicPlaying = !isMusicPlaying;
-        localStorage.setItem("musicEnabled", JSON.stringify(isMusicPlaying));
+        localStorage.setItem('musicEnabled', JSON.stringify(isMusicPlaying));
         if (isMusicPlaying) {
-            bgMusic.play().catch(error => console.error("Ошибка воспроизведения:", error));
+            bgMusic.play().catch(error => console.error('Ошибка воспроизведения:', error));
         } else {
             bgMusic.pause();
         }
         updateMusicButton();
     });
 
-    restartButton.addEventListener('click', () => {
-        initGame();
-    });
+    // Перезапуск игры
+    restartButton.addEventListener('click', initGame);
 
+    // Обработка кликов
     gameContainer.addEventListener('click', checkClick);
-    initGame();
-
-    // Функция отправки сообщения в чат через Telegram Bot API
-    async function sendScoreToChat(score) {
-        const botToken = 'ВАШ_ТОКЕН_БОТА'; // Замените на токен вашего бота
-        const chatId = Telegram.WebApp.initDataUnsafe?.chat?.id; // ID чата из Web App
-
-        if (!chatId) {
-            console.error("Не удалось получить chat_id из Telegram Web App");
-            return;
-        }
-
-        const message = `Игра окончена! Набрано очков: ${score}`;
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            if (!data.ok) {
-                console.error("Ошибка отправки сообщения:", data);
-            }
-        } catch (error) {
-            console.error("Ошибка при запросе к Telegram API:", error);
-        }
-    }
 
     // Обновление таблицы лидеров
     function updateLeaderboard(score) {
-        const user = Telegram.WebApp.initDataUnsafe?.user?.username || "Аноним";
+        const user = Telegram.WebApp.initDataUnsafe?.user?.username || 'Аноним';
         leaderboard.push({ user, score });
-        leaderboard.sort((a, b) => b.score - a.score); // Сортировка по убыванию очков
-        leaderboard = leaderboard.slice(0, 10); // Ограничение до 10 лидеров
-        localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+        leaderboard.sort((a, b) => b.score - a.score); // Сортировка по убыванию
+        leaderboard = leaderboard.slice(0, 10); // Топ-10
+        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
     }
 
     // Формирование текста таблицы лидеров
     function getLeaderboardText() {
-        if (leaderboard.length === 0) return "Таблица лидеров пуста.";
-        return "🏆 Таблица лидеров:\n" + leaderboard
+        if (leaderboard.length === 0) return 'Таблица лидеров пуста.';
+        return '🏆 Таблица лидеров:\n' + leaderboard
             .map((entry, index) => `${index + 1}. ${entry.user}: ${entry.score} очков`)
-            .join("\n");
+            .join('\n');
     }
 
-    // Отправка таблицы лидеров в чат
-    async function sendLeaderboardToChat() {
-        const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Замените на токен вашего бота
-        const chatId = Telegram.WebApp.initDataUnsafe?.chat?.id;
-
-        if (!chatId) {
-            console.error("Не удалось получить chat_id из Telegram Web App");
-            return;
-        }
-
-        const message = getLeaderboardText();
-        const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-            if (!data.ok) {
-                console.error("Ошибка отправки таблицы лидеров:", data);
-            }
-        } catch (error) {
-            console.error("Ошибка при запросе к Telegram API:", error);
-        }
-    }
-
-    // Вывод таблицы лидеров в интерфейсе (опционально)
+    // Отображение таблицы лидеров в интерфейсе
     function displayLeaderboard() {
         messageElement.textContent = `Игра окончена! Ваш счёт: ${score}\n${getLeaderboardText()}`;
     }
 
+    // Завершение игры
     function gameOver() {
         Telegram.WebApp.ready();
 
-        // Отправляем данные в Web App (если нужно для бэкенда)
+        // Отправляем данные серверу через Web App для обработки на PHP
         Telegram.WebApp.sendData(JSON.stringify({ score: score }));
 
-        // Обновляем таблицу лидеров
+        // Обновляем локальную таблицу лидеров и показываем в интерфейсе
         updateLeaderboard(score);
-
-        // Отправляем очки в чат
-        sendScoreToChat(score);
-
-        // Отправляем таблицу лидеров в чат
-        sendLeaderboardToChat();
-
-        // Показываем таблицу лидеров в интерфейсе (опционально)
         displayLeaderboard();
 
         gameContainer.style.backgroundColor = 'rgba(0, 0, 255, 0.7)';
         restartButton.style.display = 'block';
     }
+
+    // Старт игры
+    initGame();
 });
