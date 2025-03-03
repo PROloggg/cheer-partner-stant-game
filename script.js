@@ -170,11 +170,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = userData ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.username || 'Аноним' : 'Аноним';
         const chatId = Telegram.WebApp?.initDataUnsafe?.chat?.id;
 
+        console.log('Данные Telegram:', { userData, chatId }); // Отладка
+
         if (typeof Telegram !== 'undefined' && Telegram.WebApp && chatId) {
-            Telegram.WebApp.ready();
             const data = { score: score, user: user, chatId: chatId };
-            console.log('Отправляем данные в Telegram:', data);
-            Telegram.WebApp.sendData(JSON.stringify(data));
+            console.log('Отправляем данные:', data);
+
+            // Отправка через Google Apps Script (замените URL)
+            try {
+                const response = await fetch('https://script.google.com/macros/s/ВАШ_ID/exec', {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                console.log('Результат отправки:', await response.text());
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+            }
+
+            Telegram.WebApp.close(); // Закрываем Web App
         } else {
             console.warn('Telegram Web App или chatId не доступен.');
         }
@@ -183,9 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         displayLeaderboard();
         gameContainer.style.backgroundColor = 'rgba(0, 0, 255, 0.7)';
         restartButton.style.display = 'block';
-
-        // Закрываем Web App после завершения игры (опционально)
-        Telegram.WebApp.close();
     }
 
     initGame();
