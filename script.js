@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Получаем данные пользователя и чата из Telegram WebApp
     const userData = Telegram.WebApp?.initDataUnsafe?.user;
+    alert(userData)
     const chatId = Telegram.WebApp?.initDataUnsafe?.chat?.id;
     const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Замените на токен вашего бота
 
