@@ -5,12 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatId = urlParams.get('chat_id');
     const inlineMessageId = urlParams.get('inline_message_id'); // Получаем inline_message_id
 
-    // // Проверяем, что данные переданы
-    // if (!userId || (!chatId && !inlineMessageId)) {
-    //     alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
-    //     return;
-    // }
-
     // Отладка: выводим данные
     console.log('User ID:', userId);
     console.log('Chat ID:', chatId);
@@ -174,30 +168,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             let url;
+            let body;
+
             if (inlineMessageId) {
                 // Используем inline_message_id для inline-режима
-                url = `https://api.telegram.org/bot${botToken}/editMessageText`;
+                url = `https://api.telegram.org/bot${botToken}/`;
+                body = {
+                    chat_id: String(chatId),
+                    inline_message_id: inlineMessageId,
+                    text: message,
+                    method: "editMessageText",
+                };
             } else {
                 // Используем chat_id для обычного режима
                 url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+                body = {
+                    chat_id: chatId,
+                    text: message,
+                };
             }
 
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    inline_message_id: inlineMessageId,
-                    text: message,
-                }),
+                body: JSON.stringify(body),
             });
             const result = await response.json();
             console.log('Результат отправки:', result);
 
             if (!result.ok) {
+                console.error('Ошибка отправки:', result.description);
                 alert('Ошибка отправки: ' + result.description);
             }
         } catch (error) {
+            console.error('Ошибка отправки:', error);
             alert('Ошибка отправки: ' + error.message);
         }
     }
@@ -218,9 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Результат обновления счета:', result);
 
             if (!result.ok) {
+                console.error('Ошибка обновления счета:', result.description);
                 alert('Ошибка обновления счета: ' + result.description);
             }
         } catch (error) {
+            console.error('Ошибка обновления счета:', error);
             alert('Ошибка обновления счета: ' + error.message);
         }
     }
