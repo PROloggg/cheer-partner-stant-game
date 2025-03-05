@@ -5,10 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatId = urlParams.get('chat_id');
 
     // Проверяем, что данные переданы
-    if (!userId || !chatId) {
-        alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
-        return;
-    }
+    // if (!userId || !chatId) {
+    //     alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
+    //     return;
+    // }
 
     // Отладка: выводим данные
     console.log('User ID:', userId);
