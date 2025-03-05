@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const Telegram = window.Telegram;
     // Проверяем, что Telegram WebApp инициализирован
     if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
         alert('Игра должна быть запущена через Telegram.');
@@ -113,7 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkClick(event) {
         if (!isGameRunning || isProcessing) return;
-        if (isMusicPlaying && !bgMusic.paused) bgMusic.play().catch(() => {});
+        if (isMusicPlaying && !bgMusic.paused) bgMusic.play().catch(() => {
+        });
         if (event.target === toggleMusicBtn || event.target === restartButton) return;
 
         isProcessing = true;
@@ -183,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: message,
@@ -200,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`https://api.telegram.org/bot${botToken}/setGameScore`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     user_id: userId,
                     score: score,
