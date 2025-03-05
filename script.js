@@ -20,11 +20,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let footDirection = 1;
     let footSpeed = 20;
 
+    // Проверяем, что Telegram WebApp инициализирован
+    if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
+        alert('Игра должна быть запущена через Telegram.');
+        return;
+    }
+
     // Получаем данные пользователя и чата из Telegram WebApp
-    const userData = Telegram.WebApp?.initDataUnsafe?.user;
-    alert(userData)
-    const chatId = Telegram.WebApp?.initDataUnsafe?.chat?.id;
-    const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Замените на токен вашего бота
+    const initData = Telegram.WebApp.initData;
+    const params = new URLSearchParams(initData);
+    const userData = JSON.parse(params.get('user') || '{}');
+    const chatData = JSON.parse(params.get('chat') || '{}');
+
+    const user = userData.first_name || userData.username || 'Аноним';
+    const userId = userData.id;
+    const chatId = chatData.id;
+
+    const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Ваш токен бота
+
+    // Отладка: выводим данные пользователя и чата
+    alert(`Данные пользователя: ${JSON.stringify(userData)}\nДанные чата: ${JSON.stringify(chatData)}`);
+
+    if (!userId || !chatId) {
+        alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
+        return;
+    }
 
     function generateFootSpeed() {
         const baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
@@ -151,9 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.addEventListener('click', checkClick);
 
     async function sendScoreToChat(score) {
-        if (!chatId || !userData) return;
-
-        const user = userData.first_name || userData.username || 'Аноним';
         const message = `Пользователь ${user} набрал ${score} очков в игре!`;
 
         try {
@@ -166,20 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }),
             });
             const result = await response.json();
-            alert('Результат отправки:', result);
+            alert('Результат отправки: ' + JSON.stringify(result));
         } catch (error) {
-            alert('Ошибка отправки:', error);
+            alert('Ошибка отправки: ' + error.message);
         }
     }
 
     async function updateLeaderboard(score) {
-        if (!userData) return;
-
-        const user = userData.first_name || userData.username || 'Аноним';
-        const userId = userData.id;
-
         try {
-            // Устанавливаем счет пользователя через Telegram API
             const response = await fetch(`https://api.telegram.org/bot${botToken}/setGameScore`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -190,9 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }),
             });
             const result = await response.json();
-            alert('Результат обновления счета:', result);
+            alert('Результат обновления счета: ' + JSON.stringify(result));
         } catch (error) {
-            alert('Ошибка обновления счета:', error);
+            alert('Ошибка обновления счета: ' + error.message);
         }
     }
 
