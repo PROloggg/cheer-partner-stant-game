@@ -3,16 +3,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('user_id');
     const chatId = urlParams.get('chat_id');
+    const inlineMessageId = urlParams.get('inline_message_id'); // Получаем inline_message_id
 
     // Проверяем, что данные переданы
-    // if (!userId || !chatId) {
-    //     alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
-    //     return;
-    // }
+    if (!userId || (!chatId && !inlineMessageId)) {
+        alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
+        return;
+    }
 
     // Отладка: выводим данные
     console.log('User ID:', userId);
     console.log('Chat ID:', chatId);
+    console.log('Inline Message ID:', inlineMessageId);
 
     // Остальная логика игры
     const floorPixel = 10;
@@ -163,19 +165,38 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.addEventListener('click', checkClick);
 
     async function sendScoreToChat(score) {
+        if (!chatId && !inlineMessageId) {
+            alert('Ошибка: chat_id и inline_message_id не найдены.');
+            return;
+        }
+
         const message = `Пользователь набрал ${score} очков в игре!`;
 
         try {
-            const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            let url;
+            if (inlineMessageId) {
+                // Используем inline_message_id для inline-режима
+                url = `https://api.telegram.org/bot${botToken}/editMessageText`;
+            } else {
+                // Используем chat_id для обычного режима
+                url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            }
+
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chat_id: chatId,
+                    inline_message_id: inlineMessageId,
                     text: message,
                 }),
             });
             const result = await response.json();
-            alert('Результат отправки: ' + JSON.stringify(result));
+            console.log('Результат отправки:', result);
+
+            if (!result.ok) {
+                alert('Ошибка отправки: ' + result.description);
+            }
         } catch (error) {
             alert('Ошибка отправки: ' + error.message);
         }
@@ -189,11 +210,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     user_id: userId,
                     score: score,
+                    inline_message_id: inlineMessageId, // Используем inline_message_id
                     force: true, // Принудительно обновить счет
                 }),
             });
             const result = await response.json();
-            alert('Результат обновления счета: ' + JSON.stringify(result));
+            console.log('Результат обновления счета:', result);
+
+            if (!result.ok) {
+                alert('Ошибка обновления счета: ' + result.description);
+            }
         } catch (error) {
             alert('Ошибка обновления счета: ' + error.message);
         }
