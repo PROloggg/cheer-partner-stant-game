@@ -19,7 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isProcessing = false;
     let footDirection = 1;
     let footSpeed = 20;
-    let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+
+    // Получаем данные пользователя и чата из Telegram WebApp
+    const userData = Telegram.WebApp?.initDataUnsafe?.user;
+    const chatId = Telegram.WebApp?.initDataUnsafe?.chat?.id;
+    const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Замените на токен вашего бота
 
     function generateFootSpeed() {
         const baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
@@ -145,56 +149,57 @@ document.addEventListener('DOMContentLoaded', () => {
     restartButton.addEventListener('click', initGame);
     gameContainer.addEventListener('click', checkClick);
 
-    function updateLeaderboard(score) {
-        const userData = Telegram.WebApp?.initDataUnsafe?.user;
-        const user = userData ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.username || 'Аноним' : 'Аноним';
-        leaderboard.push({ user, score });
-        leaderboard.sort((a, b) => b.score - a.score);
-        leaderboard = leaderboard.slice(0, 10);
-        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+    async function sendScoreToChat(score) {
+        if (!chatId || !userData) return;
+
+        const user = userData.first_name || userData.username || 'Аноним';
+        const message = `Пользователь ${user} набрал ${score} очков в игре!`;
+
+        try {
+            const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                }),
+            });
+            const result = await response.json();
+            console.log('Результат отправки:', result);
+        } catch (error) {
+            console.error('Ошибка отправки:', error);
+        }
     }
 
-    function getLeaderboardText() {
-        if (leaderboard.length === 0) return 'Top Players\nПока нет лидеров.';
-        return 'Top Players\n' + leaderboard
-            .map((entry, index) => `${index + 1}. ${entry.user} – ${entry.score}`)
-            .join('\n');
-    }
+    async function updateLeaderboard(score) {
+        if (!userData) return;
 
-    function displayLeaderboard() {
-        messageElement.textContent = `Игра окончена! Ваш счёт: ${score}\n${getLeaderboardText()}`;
+        const user = userData.first_name || userData.username || 'Аноним';
+        const userId = userData.id;
+
+        try {
+            // Устанавливаем счет пользователя через Telegram API
+            const response = await fetch(`https://api.telegram.org/bot${botToken}/setGameScore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: userId,
+                    score: score,
+                    force: true, // Принудительно обновить счет
+                }),
+            });
+            const result = await response.json();
+            console.log('Результат обновления счета:', result);
+        } catch (error) {
+            console.error('Ошибка обновления счета:', error);
+        }
     }
 
     async function gameOver() {
-        const userData = Telegram.WebApp?.initDataUnsafe?.user;
-        const user = userData ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.username || 'Аноним' : 'Аноним';
-        const chatId = Telegram.WebApp?.initDataUnsafe?.chat?.id;
+        await sendScoreToChat(score);
+        await updateLeaderboard(score);
 
-        console.log('Данные Telegram:', { userData, chatId }); // Отладка
-
-        if (typeof Telegram !== 'undefined' && Telegram.WebApp && chatId) {
-            const data = { score: score, user: user, chatId: chatId };
-            console.log('Отправляем данные:', data);
-
-            // Отправка через Google Apps Script (замените URL)
-            try {
-                const response = await fetch('https://script.google.com/macros/s/ВАШ_ID/exec', {
-                    method: 'POST',
-                    body: JSON.stringify(data),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                console.log('Результат отправки:', await response.text());
-            } catch (error) {
-                console.error('Ошибка отправки:', error);
-            }
-
-            Telegram.WebApp.close(); // Закрываем Web App
-        } else {
-            console.warn('Telegram Web App или chatId не доступен.');
-        }
-
-        updateLeaderboard(score);
-        displayLeaderboard();
+        messageElement.textContent = `Игра окончена! Ваш счёт: ${score}`;
         gameContainer.style.backgroundColor = 'rgba(0, 0, 255, 0.7)';
         restartButton.style.display = 'block';
     }
