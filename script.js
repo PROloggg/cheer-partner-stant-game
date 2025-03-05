@@ -208,6 +208,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateLeaderboard(score) {
         try {
+            // Проверяем, что хотя бы один из идентификаторов передан
+            if (!inlineMessageId && (!chatId || !messageId)) {
+                alert('Ошибка: не указан inline_message_id или chat_id + message_id.');
+                return;
+            }
+
             const response = await fetch(`https://api.telegram.org/bot${botToken}/setGameScore`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
