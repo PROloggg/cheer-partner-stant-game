@@ -1,4 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем, что Telegram WebApp инициализирован
+    if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
+        alert('Игра должна быть запущена через Telegram.');
+        return;
+    }
+
+    // Получаем данные пользователя и чата
+    const initData = Telegram.WebApp.initData;
+    if (!initData) {
+        alert('Данные не переданы. Запустите игру через Telegram.');
+        return;
+    }
+
+    // Декодируем initData
+    const params = new URLSearchParams(initData);
+    const userData = JSON.parse(params.get('user') || '{}');
+    const chatData = JSON.parse(params.get('chat') || '{}');
+
+    const user = userData.first_name || userData.username || 'Аноним';
+    const userId = userData.id;
+    const chatId = chatData.id;
+
+    // Отладка: выводим данные пользователя и чата
+    alert(`Данные пользователя: ${JSON.stringify(userData)}\nДанные чата: ${JSON.stringify(chatData)}`);
+
+    if (!userId || !chatId) {
+        alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
+        return;
+    }
+
+    // Остальная логика игры
     const floorPixel = 10;
     const gameContainer = document.getElementById('gameContainer');
     const foot = document.getElementById('foot');
@@ -20,31 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let footDirection = 1;
     let footSpeed = 20;
 
-    // Проверяем, что Telegram WebApp инициализирован
-    if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
-        alert('Игра должна быть запущена через Telegram.');
-        return;
-    }
-
-    // Получаем данные пользователя и чата из Telegram WebApp
-    const initData = Telegram.WebApp.initData;
-    const params = new URLSearchParams(initData);
-    const userData = JSON.parse(params.get('user') || '{}');
-    const chatData = JSON.parse(params.get('chat') || '{}');
-
-    const user = userData.first_name || userData.username || 'Аноним';
-    const userId = userData.id;
-    const chatId = chatData.id;
-
     const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Ваш токен бота
-
-    // Отладка: выводим данные пользователя и чата
-    alert(`Данные пользователя: ${JSON.stringify(userData)}\nДанные чата: ${JSON.stringify(chatData)}`);
-
-    if (!userId || !chatId) {
-        alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
-        return;
-    }
 
     function generateFootSpeed() {
         const baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
