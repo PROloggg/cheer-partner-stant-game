@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatId = urlParams.get('chat_id');
     const inlineMessageId = urlParams.get('inline_message_id'); // Получаем inline_message_id
 
-    // Проверяем, что данные переданы
-    if (!userId || (!chatId && !inlineMessageId)) {
-        alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
-        return;
-    }
+    // // Проверяем, что данные переданы
+    // if (!userId || (!chatId && !inlineMessageId)) {
+    //     alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
+    //     return;
+    // }
 
     // Отладка: выводим данные
     console.log('User ID:', userId);
