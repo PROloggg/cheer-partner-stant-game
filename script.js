@@ -4,11 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const userId = urlParams.get('user_id');
     const chatId = urlParams.get('chat_id');
     const inlineMessageId = urlParams.get('inline_message_id'); // Получаем inline_message_id
+    const messageId = urlParams.get('message_id'); // Получаем message_id (если используется)
 
     // Отладка: выводим данные
     console.log('User ID:', userId);
     console.log('Chat ID:', chatId);
     console.log('Inline Message ID:', inlineMessageId);
+    console.log('Message ID:', messageId);
 
     // Остальная логика игры
     const floorPixel = 10;
@@ -172,12 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (inlineMessageId) {
                 // Используем inline_message_id для inline-режима
-                url = `https://api.telegram.org/bot${botToken}/`;
+                url = `https://api.telegram.org/bot${botToken}/editMessageText`;
                 body = {
-                    chat_id: String(chatId),
                     inline_message_id: inlineMessageId,
                     text: message,
-                    method: "editMessageText",
                 };
             } else {
                 // Используем chat_id для обычного режима
@@ -212,10 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    user_id: userId,
-                    score: score,
-                    inline_message_id: inlineMessageId, // Используем inline_message_id
-                    force: true, // Принудительно обновить счет
+                    user_id: userId, // Идентификатор пользователя
+                    score: score, // Новый счет
+                    force: true, // Разрешить уменьшение счета
+                    inline_message_id: inlineMessageId, // Идентификатор inline-сообщения (если используется)
+                    chat_id: chatId, // Идентификатор чата (если используется)
+                    message_id: messageId, // Идентификатор сообщения (если используется)
                 }),
             });
             const result = await response.json();
