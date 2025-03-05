@@ -161,10 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.addEventListener('click', checkClick);
 
     async function sendScoreToChat(score) {
-        if (!chatId && !inlineMessageId) {
-            alert('Ошибка: chat_id и inline_message_id не найдены.');
-            return;
-        }
 
         const message = `Пользователь набрал ${score} очков в игре!`;
 
