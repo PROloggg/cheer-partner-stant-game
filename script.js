@@ -1,34 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const Telegram = window.Telegram;
-    // Проверяем, что Telegram WebApp инициализирован
-    if (typeof Telegram === 'undefined' || !Telegram.WebApp) {
-        alert('Игра должна быть запущена через Telegram.');
-        return;
-    }
+    // Получаем параметры из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+    const chatId = urlParams.get('chat_id');
 
-    // Получаем данные пользователя и чата
-    const initData = Telegram.WebApp.initData;
-    if (!initData) {
-        alert('Данные не переданы. Запустите игру через Telegram.');
-        return;
-    }
-
-    // Декодируем initData
-    const params = new URLSearchParams(initData);
-    const userData = JSON.parse(params.get('user') || '{}');
-    const chatData = JSON.parse(params.get('chat') || '{}');
-
-    const user = userData.first_name || userData.username || 'Аноним';
-    const userId = userData.id;
-    const chatId = chatData.id;
-
-    // Отладка: выводим данные пользователя и чата
-    alert(`Данные пользователя: ${JSON.stringify(userData)}\nДанные чата: ${JSON.stringify(chatData)}`);
-
+    // Проверяем, что данные переданы
     if (!userId || !chatId) {
         alert('Ошибка: данные пользователя или чата недоступны. Запустите игру через Telegram.');
         return;
     }
+
+    // Отладка: выводим данные
+    console.log('User ID:', userId);
+    console.log('Chat ID:', chatId);
 
     // Остальная логика игры
     const floorPixel = 10;
@@ -114,8 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkClick(event) {
         if (!isGameRunning || isProcessing) return;
-        if (isMusicPlaying && !bgMusic.paused) bgMusic.play().catch(() => {
-        });
+        if (isMusicPlaying && !bgMusic.paused) bgMusic.play().catch(() => {});
         if (event.target === toggleMusicBtn || event.target === restartButton) return;
 
         isProcessing = true;
@@ -180,12 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.addEventListener('click', checkClick);
 
     async function sendScoreToChat(score) {
-        const message = `Пользователь ${user} набрал ${score} очков в игре!`;
+        const message = `Пользователь набрал ${score} очков в игре!`;
 
         try {
             const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chat_id: chatId,
                     text: message,
@@ -202,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`https://api.telegram.org/bot${botToken}/setGameScore`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: userId,
                     score: score,
