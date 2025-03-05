@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isMusicPlaying = !isMusicPlaying;
         localStorage.setItem('musicEnabled', JSON.stringify(isMusicPlaying));
         if (isMusicPlaying) {
-            bgMusic.play().catch(error => console.error('Ошибка воспроизведения:', error));
+            bgMusic.play().catch(error => alert('Ошибка воспроизведения:', error));
         } else {
             bgMusic.pause();
         }
@@ -165,9 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }),
             });
             const result = await response.json();
-            console.log('Результат отправки:', result);
+            alert('Результат отправки:', result);
         } catch (error) {
-            console.error('Ошибка отправки:', error);
+            alert('Ошибка отправки:', error);
         }
     }
 
@@ -189,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }),
             });
             const result = await response.json();
-            console.log('Результат обновления счета:', result);
+            alert('Результат обновления счета:', result);
         } catch (error) {
-            console.error('Ошибка обновления счета:', error);
+            alert('Ошибка обновления счета:', error);
         }
     }
 
