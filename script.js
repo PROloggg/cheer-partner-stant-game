@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let footDirection = 1;
     let footSpeed = 20;
 
-    const botToken = '7892110041:AAEGzeTqeB0Gtl5fKmwkOCo9aCnVA_Hm9QQ'; // Ваш токен бота
+    const botToken = ''; // Ваш токен бота
 
     function generateFootSpeed() {
         const baseSpeed = Math.floor(Math.random() * 10) + Math.floor(Math.random() + 15);
